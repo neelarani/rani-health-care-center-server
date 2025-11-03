@@ -1,0 +1,13 @@
+export { default as userRoutes } from "./user/user.routes";
+export { default as authRoutes } from "./auth/auth.routes";
+export { default as scheduleRoutes } from "./schedule/schedule.routes";
+export { default as doctorScheduleRoutes } from "./doctorSchedule/doctorSchedule.routes";
+export { default as specialtiesRoutes } from "./specialties/specialties.routes";
+export { default as doctorRoutes } from "./doctor/doctor.routes";
+export { default as adminRoutes } from "./admin/admin.routes";
+export { default as patientRoutes } from "./patient/patient.routes";
+export { default as paymentRoutes } from "./payment/payment.routes";
+export { default as appointmentRoutes } from "./appointment/appointment.routes";
+export { default as prescriptionRoutes } from "./prescription/prescription.routes";
+export { default as reviewRoutes } from "./review/review.routes";
+export { default as metaRoutes } from "./meta/meta.routes";
