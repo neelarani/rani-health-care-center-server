@@ -2,7 +2,7 @@
 
 export type IJWTPayload = {
   email: string;
-  role: "Admin" | "User";
+  role: 'User' | 'ADMIN' | 'PATIENT' | 'DOCTOR';
 };
 
 declare global {

@@ -1,7 +1,7 @@
-import { Admin, Prisma, UserStatus } from "@prisma/client";
-import * as constants from "./admin.constant";
-import * as interfaces from "./admin.interface";
-import { IOptions, paginationHelper } from "@/shared";
+import { Admin, Prisma, UserStatus } from '@prisma/client';
+import * as constants from './admin.constant';
+import * as interfaces from './admin.interface';
+import { IOptions, paginationHelper, prisma } from '@/shared';
 
 export const getAllFromDB = async (
   params: interfaces.IAdminFilterRequest,
@@ -14,10 +14,10 @@ export const getAllFromDB = async (
 
   if (params.searchTerm) {
     andCondions.push({
-      OR: constants.adminSearchAbleFields.map((field) => ({
+      OR: constants.adminSearchAbleFields.map(field => ({
         [field]: {
           contains: params.searchTerm,
-          mode: "insensitive",
+          mode: 'insensitive',
         },
       })),
     });
@@ -25,7 +25,7 @@ export const getAllFromDB = async (
 
   if (Object.keys(filterData).length > 0) {
     andCondions.push({
-      AND: Object.keys(filterData).map((key) => ({
+      AND: Object.keys(filterData).map(key => ({
         [key]: {
           equals: (filterData as any)[key],
         },
@@ -50,7 +50,7 @@ export const getAllFromDB = async (
             [options.sortBy]: options.sortOrder,
           }
         : {
-            createdAt: "desc",
+            createdAt: 'desc',
           },
   });
 
@@ -107,7 +107,7 @@ export const deleteFromDB = async (id: string): Promise<Admin | null> => {
     },
   });
 
-  const result = await prisma.$transaction(async (transactionClient) => {
+  const result = await prisma.$transaction(async transactionClient => {
     const adminDeletedData = await transactionClient.admin.delete({
       where: {
         id,
@@ -134,7 +134,7 @@ export const softDeleteFromDB = async (id: string): Promise<Admin | null> => {
     },
   });
 
-  const result = await prisma.$transaction(async (transactionClient) => {
+  const result = await prisma.$transaction(async transactionClient => {
     const adminDeletedData = await transactionClient.admin.update({
       where: {
         id,
