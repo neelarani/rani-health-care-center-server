@@ -1,9 +1,9 @@
-import { Request } from "express";
-import { Admin, Doctor, Prisma, UserRole, UserStatus } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import * as constants from "./user.constant";
-import { fileUploader, IOptions, paginationHelper, prisma } from "@/shared";
-import { IJWTPayload } from "@/interface";
+import { Request } from 'express';
+import { Admin, Doctor, Prisma, UserRole, UserStatus } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import * as constants from './user.constant';
+import { fileUploader, IOptions, paginationHelper, prisma } from '@/shared';
+import { IJWTPayload } from '@/interface';
 
 export const createPatient = async (req: Request) => {
   if (req.file) {
@@ -13,7 +13,7 @@ export const createPatient = async (req: Request) => {
 
   const hashPassword = await bcrypt.hash(req.body.password, 10);
 
-  const result = await prisma.$transaction(async (tnx) => {
+  const result = await prisma.$transaction(async tnx => {
     await tnx.user.create({
       data: {
         email: req.body.patient.email,
@@ -45,7 +45,7 @@ export const createAdmin = async (req: Request): Promise<Admin> => {
     role: UserRole.ADMIN,
   };
 
-  const result = await prisma.$transaction(async (transactionClient) => {
+  const result = await prisma.$transaction(async transactionClient => {
     await transactionClient.user.create({
       data: userData,
     });
@@ -75,7 +75,7 @@ export const createDoctor = async (req: Request): Promise<Doctor> => {
     role: UserRole.DOCTOR,
   };
 
-  const result = await prisma.$transaction(async (transactionClient) => {
+  const result = await prisma.$transaction(async transactionClient => {
     await transactionClient.user.create({
       data: userData,
     });
@@ -99,10 +99,10 @@ export const getAllFromDB = async (params: any, options: IOptions) => {
 
   if (searchTerm) {
     andConditions.push({
-      OR: constants.userSearchableFields.map((field) => ({
+      OR: constants.userSearchableFields.map(field => ({
         [field]: {
           contains: searchTerm,
-          mode: "insensitive",
+          mode: 'insensitive',
         },
       })),
     });
@@ -110,7 +110,7 @@ export const getAllFromDB = async (params: any, options: IOptions) => {
 
   if (Object.keys(filterData).length > 0) {
     andConditions.push({
-      AND: Object.keys(filterData).map((key) => ({
+      AND: Object.keys(filterData).map(key => ({
         [key]: {
           equals: (filterData as any)[key],
         },

@@ -1,53 +1,54 @@
-import { UserRole } from "@prisma/client";
-import { checkAuth, validateRequest } from "@/app/middlewares";
-import { fileUploader } from "@/shared";
-import * as controller from "./user.controller";
-import * as validation from "./user.validation";
-import { Router } from "express";
+import { UserRole } from '@prisma/client';
+import { checkAuth, validateRequest } from '@/app/middlewares';
+import { fileUploader } from '@/shared';
+import * as controller from './user.controller';
+import * as validation from './user.validation';
+import { Router } from 'express';
 
 const router = Router();
 
-router.get("/", checkAuth(UserRole.ADMIN), controller.getAllFromDB);
+router.get('/', checkAuth(UserRole.ADMIN), controller.getAllFromDB);
 
 router.get(
-  "/me",
+  '/me',
   checkAuth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT),
   controller.getMyProfile
 );
 
 router.post(
-  "/create-patient",
-  fileUploader.upload.single("file"),
+  '/create-patient',
+  fileUploader.upload.single('file'),
   validateRequest(validation.createPatientValidationSchema),
   controller.createPatient
 );
 
 router.post(
-  "/create-admin",
+  '/create-admin',
   checkAuth(UserRole.ADMIN),
-  fileUploader.upload.single("file"),
+  fileUploader.upload.single('file'),
   validateRequest(validation.createAdminValidationSchema),
   controller.createAdmin
 );
 
 router.post(
-  "/create-doctor",
+  '/create-doctor',
   checkAuth(UserRole.ADMIN),
+  fileUploader.upload.single('file'),
   validateRequest(validation.createDoctorValidationSchema),
-  fileUploader.upload.single("file"),
+
   controller.createDoctor
 );
 
 router.patch(
-  "/:id/status",
+  '/:id/status',
   checkAuth(UserRole.ADMIN),
   controller.changeProfileStatus
 );
 
 router.patch(
-  "/update-my-profile",
+  '/update-my-profile',
   checkAuth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT),
-  fileUploader.upload.single("file"),
+  fileUploader.upload.single('file'),
   controller.updateMyProfile
 );
 
