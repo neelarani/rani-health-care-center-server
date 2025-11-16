@@ -1,6 +1,6 @@
-import { Request } from "express";
-import { Specialties } from "@prisma/client";
-import { fileUploader, prisma } from "@/shared";
+import { Request } from 'express';
+import { Specialties } from '@prisma/client';
+import { fileUploader, prisma } from '@/shared';
 
 export const insertIntoDB = async (req: Request) => {
   const file = req.file;
@@ -8,6 +8,12 @@ export const insertIntoDB = async (req: Request) => {
   if (file) {
     const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
     req.body.icon = uploadToCloudinary?.secure_url;
+  }
+
+  if (req.body.data) {
+    const parsedData = JSON.parse(req.body.data);
+    req.body = { ...req.body, ...parsedData };
+    delete req.body.data;
   }
 
   const result = await prisma.specialties.create({
