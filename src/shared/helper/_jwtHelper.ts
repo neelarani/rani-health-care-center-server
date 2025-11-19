@@ -1,5 +1,5 @@
-import { IJWTPayload } from "@/interface";
-import jwt, { JwtPayload, Secret, SignOptions } from "jsonwebtoken";
+import { IJWTPayload } from '@/interface';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 
 export const generateToken = (
   payload: any,
@@ -7,7 +7,7 @@ export const generateToken = (
   expiresIn: string
 ) => {
   const token = jwt.sign(payload, secret, {
-    algorithm: "HS256",
+    algorithm: 'HS256',
     expiresIn,
   } as SignOptions);
 

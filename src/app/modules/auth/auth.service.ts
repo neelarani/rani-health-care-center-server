@@ -1,10 +1,10 @@
-import { UserStatus } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import { Secret } from "jsonwebtoken";
-import httpStatus from "http-status";
-import { emailSender, generateToken, prisma, verifyToken } from "@/shared";
-import { ApiError } from "@/app/errors";
-import config from "@/config";
+import { UserStatus } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import { Secret } from 'jsonwebtoken';
+import httpStatus from 'http-status';
+import { emailSender, generateToken, prisma, verifyToken } from '@/shared';
+import { ApiError } from '@/app/errors';
+import config from '@/config';
 
 export const login = async (payload: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -20,18 +20,18 @@ export const login = async (payload: { email: string; password: string }) => {
   );
 
   if (!isCorrectPassword)
-    throw new ApiError(httpStatus.BAD_REQUEST, "Password is incorrect!");
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Password is incorrect!');
 
   const accessToken = generateToken(
     { email: user.email, role: user.role },
     config.jwt.jwt_secret as Secret,
-    "1h"
+    '1h'
   );
 
   const refreshToken = generateToken(
     { email: user.email, role: user.role },
     config.jwt.refresh_token_secret as Secret,
-    "90d"
+    '90d'
   );
 
   return {
@@ -46,7 +46,7 @@ export const refreshToken = async (token: string) => {
   try {
     decodedData = verifyToken(token, config.jwt.refresh_token_secret as Secret);
   } catch (err) {
-    throw new Error("You are not authorized!");
+    throw new Error('You are not authorized!');
   }
 
   const userData = await prisma.user.findUniqueOrThrow({
@@ -85,7 +85,7 @@ export const changePassword = async (user: any, payload: any) => {
   );
 
   if (!isCorrectPassword) {
-    throw new Error("Password incorrect!");
+    throw new Error('Password incorrect!');
   }
 
   const hashedPassword: string = await bcrypt.hash(
@@ -104,7 +104,7 @@ export const changePassword = async (user: any, payload: any) => {
   });
 
   return {
-    message: "Password changed successfully!",
+    message: 'Password changed successfully!',
   };
 };
 
@@ -160,7 +160,7 @@ export const resetPassword = async (
   );
 
   if (!isValidToken) {
-    throw new ApiError(httpStatus.FORBIDDEN, "Forbidden!");
+    throw new ApiError(httpStatus.FORBIDDEN, 'Forbidden!');
   }
 
   // hash password
@@ -180,8 +180,8 @@ export const resetPassword = async (
   });
 };
 
-export const getMe = async (session: any) => {
-  const accessToken = session.accessToken;
+export const getMe = async (user: any) => {
+  const accessToken = user.accessToken;
   const decodedData = verifyToken(accessToken, config.jwt.jwt_secret as Secret);
 
   const userData = await prisma.user.findUniqueOrThrow({
@@ -189,15 +189,68 @@ export const getMe = async (session: any) => {
       email: decodedData.email,
       status: UserStatus.ACTIVE,
     },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      needPasswordChange: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      admin: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
+      doctor: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          address: true,
+          registrationNumber: true,
+          experience: true,
+          gender: true,
+          appointmentFee: true,
+          qualification: true,
+          currentWorkingPlace: true,
+          designation: true,
+          averageRating: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+          doctorSpecialties: {
+            include: {
+              specialities: true,
+            },
+          },
+        },
+      },
+      patient: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          address: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+          patientHealthData: true,
+        },
+      },
+    },
   });
 
-  const { id, email, role, needPasswordChange, status } = userData;
-
-  return {
-    id,
-    email,
-    role,
-    needPasswordChange,
-    status,
-  };
+  return userData;
 };

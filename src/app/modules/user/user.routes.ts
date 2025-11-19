@@ -32,11 +32,14 @@ router.post(
 
 router.post(
   '/create-doctor',
-  checkAuth(UserRole.ADMIN),
+  checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
   fileUploader.upload.single('file'),
-  validateRequest(validation.createDoctorValidationSchema),
-
-  controller.createDoctor
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = validation.createDoctorValidationSchema.parse(
+      JSON.parse(req.body.data)
+    );
+    return controller.createDoctor(req, res, next);
+  }
 );
 
 router.patch(
