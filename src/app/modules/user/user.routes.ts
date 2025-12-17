@@ -3,7 +3,7 @@ import { checkAuth, validateRequest } from '@/app/middlewares';
 import { fileUploader } from '@/shared';
 import * as controller from './user.controller';
 import * as validation from './user.validation';
-import { Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 
 const router = Router();
 
