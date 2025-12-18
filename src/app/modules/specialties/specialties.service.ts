@@ -1,37 +1,62 @@
-import { Request } from 'express';
-import { Specialties } from '@prisma/client';
-import { fileUploader, prisma } from '@/shared';
+import { Specialties } from "@prisma/client";
+import { Request } from "express";
+import { fileUploader } from "../../../helpers/fileUploader";
+import prisma from "../../../shared/prisma";
 
-export const insertIntoDB = async (req: Request) => {
-  const file = req.file;
+const inserIntoDB = async (req: Request) => {
 
-  if (file) {
-    const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-    req.body.icon = uploadToCloudinary?.secure_url;
-  }
+    const file = req.file;
 
-  if (req.body.data) {
-    const parsedData = JSON.parse(req.body.data);
-    req.body = { ...req.body, ...parsedData };
-    delete req.body.data;
-  }
+    if (file) {
+        const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
+        req.body.icon = uploadToCloudinary?.secure_url;
+    }
 
-  const result = await prisma.specialties.create({
-    data: req.body,
-  });
+    const result = await prisma.specialties.create({
+        data: req.body
+    });
 
-  return result;
+    return result;
 };
 
-export const getAllFromDB = async (): Promise<Specialties[]> => {
-  return await prisma.specialties.findMany();
+import { paginationHelper } from "../../../helpers/paginationHelper";
+import { IPaginationOptions } from "../../interfaces/pagination";
+
+const getAllFromDB = async (options: IPaginationOptions) => {
+    const { limit, page, skip } = paginationHelper.calculatePagination(options);
+
+    const result = await prisma.specialties.findMany({
+        skip,
+        take: limit,
+        orderBy:
+            options.sortBy && options.sortOrder
+                ? { [options.sortBy]: options.sortOrder }
+                : { createdAt: "desc" },
+    });
+
+    const total = await prisma.specialties.count();
+
+    return {
+        meta: {
+            total,
+            page,
+            limit,
+        },
+        data: result,
+    };
 };
 
-export const deleteFromDB = async (id: string): Promise<Specialties> => {
-  const result = await prisma.specialties.delete({
-    where: {
-      id,
-    },
-  });
-  return result;
+const deleteFromDB = async (id: string): Promise<Specialties> => {
+    const result = await prisma.specialties.delete({
+        where: {
+            id,
+        },
+    });
+    return result;
 };
+
+export const SpecialtiesService = {
+    inserIntoDB,
+    getAllFromDB,
+    deleteFromDB
+}

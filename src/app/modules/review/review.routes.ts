@@ -1,11 +1,20 @@
-import { UserRole } from "@prisma/client";
-import { Router } from "express";
-import * as controller from "./review.controller";
-import { checkAuth } from "@/app/middlewares";
+import express from 'express'
+import { ReviewController } from './review.controller';
+import auth from '../../middlewares/auth';
+import { UserRole } from '@prisma/client';
+import validateRequest from '../../middlewares/validateRequest';
+import { ReviewValidation } from './review.validation';
 
-const router = Router();
+const router = express.Router();
 
-router.get("/", controller.getAllFromDB);
-router.post("/", checkAuth(UserRole.PATIENT), controller.insertIntoDB);
+router.get('/', ReviewController.getAllFromDB);
 
-export default router;
+router.post(
+    '/',
+    auth(UserRole.PATIENT),
+    validateRequest(ReviewValidation.create),
+    ReviewController.insertIntoDB
+);
+
+
+export const ReviewRoutes = router;

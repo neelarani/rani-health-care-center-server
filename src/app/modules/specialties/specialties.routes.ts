@@ -1,19 +1,50 @@
-import { UserRole } from "@prisma/client";
-import { Router } from "express";
-import * as controller from "./specialties.controller";
-import { fileUploader } from "@/shared";
-import { checkAuth } from "@/app/middlewares";
+import express, { NextFunction, Request, Response } from 'express';
+import { SpecialtiesController } from './specialties.controller';
+import { fileUploader } from '../../../helpers/fileUploader';
+import { SpecialtiesValidtaion } from './specialties.validation';
+import auth from '../../middlewares/auth';
+import { UserRole } from '@prisma/client';
 
-const router = Router();
 
-router.get("/", controller.getAllFromDB);
+const router = express.Router();
 
-router.post("/", fileUploader.upload.single("file"), controller.insertIntoDB);
 
-router.delete(
-  "/:id",
-  checkAuth(UserRole.ADMIN, UserRole.ADMIN),
-  controller.deleteFromDB
+// Task 1: Retrieve Specialties Data
+
+/**
+- Develop an API endpoint to retrieve all specialties data.
+- Implement an HTTP GET endpoint returning specialties in JSON format.
+- ENDPOINT: /specialties
+*/
+router.get(
+    '/',
+    SpecialtiesController.getAllFromDB
 );
 
-export default router;
+router.post(
+    '/',
+    fileUploader.upload.single('file'),
+    (req: Request, res: Response, next: NextFunction) => {
+        req.body = SpecialtiesValidtaion.create.parse(JSON.parse(req.body.data))
+        return SpecialtiesController.insertIntoDB(req, res, next)
+    }
+);
+
+
+
+// Task 2: Delete Specialties Data by ID
+
+/**
+- Develop an API endpoint to delete specialties by ID.
+- Implement an HTTP DELETE endpoint accepting the specialty ID.
+- Delete the specialty from the database and return a success message.
+- ENDPOINT: /specialties/:id
+*/
+
+router.delete(
+    '/:id',
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    SpecialtiesController.deleteFromDB
+);
+
+export const SpecialtiesRoutes = router;

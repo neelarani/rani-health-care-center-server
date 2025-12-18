@@ -1,56 +1,60 @@
-import { Router } from 'express';
 import { UserRole } from '@prisma/client';
-import { checkAuth, validateRequest } from '@/app/middlewares';
-import * as controller from './appointment.controller';
-import * as validation from './appointment.validation';
-import { paymentLimiter } from '@/app/middlewares/rateLimiter';
+import express from 'express';
+import auth from '../../middlewares/auth';
+import { paymentLimiter } from '../../middlewares/rateLimiter';
+import validateRequest from '../../middlewares/validateRequest';
+import { AppointmentController } from './appointment.controller';
+import { AppointmentValidation } from './appointment.validation';
 
-const router = Router();
+const router = express.Router();
+
+/**
+ * ENDPOINT: /appointment/
+ * 
+ * Get all appointment with filtering
+ * Only accessable for Admin & Super Admin
+ */
+router.get(
+    '/',
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    AppointmentController.getAllFromDB
+);
 
 router.get(
-  '/',
-  checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-  controller.getAllFromDB
-);
+    '/my-appointment',
+    auth(UserRole.PATIENT, UserRole.DOCTOR),
+    AppointmentController.getMyAppointment
+)
 
-router.get(
-  '/my-appointment',
-  checkAuth(UserRole.PATIENT, UserRole.DOCTOR),
-  controller.getMyAppointment
+router.post(
+    '/',
+    auth(UserRole.PATIENT),
+    paymentLimiter,
+    validateRequest(AppointmentValidation.createAppointment),
+    AppointmentController.createAppointment
 );
 
 router.post(
-  '/',
-  checkAuth(UserRole.PATIENT),
-  paymentLimiter,
-  validateRequest(validation.createAppointment),
-  controller.createAppointment
+    '/pay-later',
+    auth(UserRole.PATIENT),
+    validateRequest(AppointmentValidation.createAppointment),
+    AppointmentController.createAppointmentWithPayLater
 );
 
 router.post(
-  '/pay-later',
-  checkAuth(UserRole.PATIENT),
-  validateRequest(validation.createAppointment),
-  controller.createAppointmentWithPayLater
-);
-
-router.post(
-  '/:id/initiate-payment',
-  checkAuth(UserRole.PATIENT),
-  paymentLimiter,
-  controller.initiatePayment
+    '/:id/initiate-payment',
+    auth(UserRole.PATIENT),
+    paymentLimiter,
+    AppointmentController.initiatePayment
 );
 
 router.patch(
-  '/status/:id',
-  checkAuth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.DOCTOR),
-  controller.changeAppointmentStatus
+    '/status/:id',
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.DOCTOR),
+    AppointmentController.changeAppointmentStatus
 );
 
-router.post(
-  '/pay-later',
-  checkAuth(UserRole.PATIENT),
-  controller.createAppointmentWithPayLater
-);
+router.post('/pay-later', auth(UserRole.PATIENT), AppointmentController.createAppointmentWithPayLater);
 
-export default router;
+
+export const AppointmentRoutes = router;

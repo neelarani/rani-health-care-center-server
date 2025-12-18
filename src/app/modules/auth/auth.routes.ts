@@ -1,49 +1,63 @@
 import { UserRole } from '@prisma/client';
-import * as controller from './auth.controller';
-import { checkAuth } from '@/app/middlewares';
-import { NextFunction, Request, Response, Router } from 'express';
-import { authLimiter } from '@/app/middlewares/rateLimiter';
+import express, { NextFunction, Request, Response } from 'express';
+import auth from '../../middlewares/auth';
+import { authLimiter } from '../../middlewares/rateLimiter';
+import { AuthController } from './auth.controller';
 
-const router = Router();
-
-router.post('/login', authLimiter, controller.login);
-
-router.post('/refresh-token', controller.refreshToken);
+const router = express.Router();
 
 router.post(
-  '/change-password',
-  checkAuth(
-    UserRole.SUPER_ADMIN,
-    UserRole.ADMIN,
-    UserRole.DOCTOR,
-    UserRole.PATIENT
-  ),
-  controller.changePassword
+    '/login',
+    authLimiter,
+    AuthController.loginUser
 );
 
-router.post('/forgot-password', controller.forgotPassword);
+router.post(
+    '/refresh-token',
+    AuthController.refreshToken
+)
 
 router.post(
-  '/reset-password',
-  (req: Request, res: Response, next: NextFunction) => {
-    //user is resetting password without token and logged in newly created admin or doctor
-    if (!req.headers.authorization && req.cookies.accessToken) {
-      console.log(req.headers.authorization, 'from reset password route guard');
-      console.log(req.cookies.accessToken, 'from reset password route guard');
-      checkAuth(
+    '/change-password',
+    auth(
         UserRole.SUPER_ADMIN,
         UserRole.ADMIN,
         UserRole.DOCTOR,
         UserRole.PATIENT
-      )(req, res, next);
-    } else {
-      //user is resetting password via email link with token
-      next();
-    }
-  },
-  controller.resetPassword
+    ),
+    AuthController.changePassword
 );
 
-router.get('/me', controller.getMe);
+router.post(
+    '/forgot-password',
+    AuthController.forgotPassword
+);
 
-export default router;
+router.post(
+    '/reset-password',
+    (req: Request, res: Response, next: NextFunction) => {
+
+        //user is resetting password without token and logged in newly created admin or doctor
+        if (!req.headers.authorization && req.cookies.accessToken) {
+            console.log(req.headers.authorization, "from reset password route guard");
+            console.log(req.cookies.accessToken, "from reset password route guard");
+            auth(
+                UserRole.SUPER_ADMIN,
+                UserRole.ADMIN,
+                UserRole.DOCTOR,
+                UserRole.PATIENT
+            )(req, res, next);
+        } else {
+            //user is resetting password via email link with token
+            next();
+        }
+    },
+    AuthController.resetPassword
+)
+
+router.get(
+    '/me',
+    AuthController.getMe
+)
+
+export const AuthRoutes = router;

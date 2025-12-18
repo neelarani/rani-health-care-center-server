@@ -1,30 +1,46 @@
+import { Request, Response } from "express";
+import catchAsync from "../../../shared/catchAsync";
+import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
-import * as service from "./specialties.service";
-import { catchAsync, sendResponse } from "@/shared";
+import { SpecialtiesService } from "./specialties.service";
+import pick from "../../../shared/pick";
 
-export const insertIntoDB = catchAsync(async (req, res) =>
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Specialties created successfully!",
-    data: await service.insertIntoDB(req),
-  })
-);
+const insertIntoDB = catchAsync(async (req: Request, res: Response) => {
+    const result = await SpecialtiesService.inserIntoDB(req);
 
-export const getAllFromDB = catchAsync(async (req, res) =>
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Specialties data fetched successfully",
-    data: await service.getAllFromDB(),
-  })
-);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Specialties created successfully!",
+        data: result
+    });
+});
 
-export const deleteFromDB = catchAsync(async (req, res) =>
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Specialty deleted successfully",
-    data: await service.deleteFromDB(req.params.id),
-  })
-);
+const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
+    const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+    const result = await SpecialtiesService.getAllFromDB(options);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Specialties data fetched successfully",
+        meta: result.meta,
+        data: result.data,
+    });
+});
+
+const deleteFromDB = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await SpecialtiesService.deleteFromDB(id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Specialty deleted successfully',
+        data: result,
+    });
+});
+
+export const SpecialtiesController = {
+    insertIntoDB,
+    getAllFromDB,
+    deleteFromDB
+};

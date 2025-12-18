@@ -1,29 +1,49 @@
-import { catchAsync, sendResponse, stripe } from "@/shared";
-import * as service from "./payment.service";
-import config from "@/config";
+import { Request, Response } from "express";
+import config from "../../../config";
+import { stripe } from "../../../helpers/stripe";
+import catchAsync from "../../../shared/catchAsync";
+import sendResponse from "../../../shared/sendResponse";
+import { PaymentService } from "./payment.service";
 
-export const handleStripeWebhookEvent = catchAsync(async (req, res) => {
-  const sig = req.headers["stripe-signature"] as string;
+const handleStripeWebhookEvent = catchAsync(async (req: Request, res: Response) => {
+    const sig = req.headers["stripe-signature"] as string;
+    const webhookSecret = config.stripeWebhookSecret as string;
 
-  let event;
+    if (!webhookSecret) {
+        console.error("⚠️ Stripe webhook secret not configured");
+        return res.status(500).send("Webhook secret not configured");
+    }
 
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      config.stripe.web_hook_secret
-    );
-  } catch (err: any) {
-    console.error("Webhook signature verification failed:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    let event;
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err: any) {
+        console.error("⚠️ Webhook signature verification failed:", err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
 
-  const result = await service.handleStripeWebhookEvent(event);
+    try {
+        const result = await PaymentService.handleStripeWebhookEvent(event);
 
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Webhook req send successfully",
-    data: result,
-  });
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Webhook processed successfully',
+            data: result,
+        });
+    } catch (error: any) {
+        console.error("❌ Error processing webhook:", error);
+        // Still return 200 to acknowledge receipt to Stripe
+        // Stripe will retry if we return an error
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: 'Webhook received but processing failed',
+            data: { error: error.message },
+        });
+    }
 });
+
+export const PaymentController = {
+    handleStripeWebhookEvent
+}

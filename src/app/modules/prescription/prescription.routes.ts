@@ -1,16 +1,30 @@
-import { UserRole } from "@prisma/client";
-import { checkAuth } from "@/app/middlewares";
-import { Router } from "express";
-import * as controller from "./prescription.controller";
+import express from 'express';
+import { PrescriptionController } from './prescription.controller';
+import auth from '../../middlewares/auth';
+import { UserRole } from '@prisma/client';
+import validateRequest from '../../middlewares/validateRequest';
+import { PrescriptionValidation } from './prescription.validation';
 
-const router = Router();
+const router = express.Router();
 
 router.get(
-  "/my-prescription",
-  checkAuth(UserRole.PATIENT),
-  controller.patientPrescription
+    '/',
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    PrescriptionController.getAllFromDB
 );
 
-router.post("/", checkAuth(UserRole.DOCTOR), controller.createPrescription);
+router.get(
+    '/my-prescription',
+    auth(UserRole.PATIENT),
+    PrescriptionController.patientPrescription
+)
 
-export default router;
+router.post(
+    '/',
+    auth(UserRole.DOCTOR),
+    validateRequest(PrescriptionValidation.create),
+    PrescriptionController.insertIntoDB
+)
+
+
+export const PrescriptionRoutes = router;

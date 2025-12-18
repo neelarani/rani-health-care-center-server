@@ -1,14 +1,15 @@
-import { UserRole } from "@prisma/client";
-import { checkAuth } from "@/app/middlewares";
-import * as controller from "./meta.controller";
-import { Router } from "express";
+import express from 'express';
+import { MetaController } from './meta.controller';
+import auth from '../../middlewares/auth';
+import { UserRole } from '@prisma/client';
 
-const router = Router();
+const router = express.Router();
 
 router.get(
-  "/",
-  checkAuth(UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT),
-  controller.fetchDashboardMetaData
-);
+    '/',
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.DOCTOR, UserRole.PATIENT),
+    MetaController.fetchDashboardMetaData
+)
 
-export default router;
+
+export const MetaRoutes = router;

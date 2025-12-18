@@ -1,58 +1,80 @@
-import { Router } from "express";
-import * as modules from "@/app/modules";
+import express from 'express';
+import { apiLimiter } from '../middlewares/rateLimiter';
+import { AdminRoutes } from '../modules/admin/admin.routes';
+import { AppointmentRoutes } from '../modules/appointment/appointment.routes';
+import { AuthRoutes } from '../modules/auth/auth.routes';
+import { DoctorRoutes } from '../modules/doctor/doctor.routes';
+import { DoctorScheduleRoutes } from '../modules/doctorSchedule/doctorSchedule.routes';
+import { MetaRoutes } from '../modules/meta/meta.routes';
+import { PatientRoutes } from '../modules/patient/patient.route';
+import { PaymentRoutes } from '../modules/payment/payment.routes';
+import { PrescriptionRoutes } from '../modules/prescription/prescription.routes';
+import { ReviewRoutes } from '../modules/review/review.routes';
+import { ScheduleRoutes } from '../modules/schedule/schedule.routes';
+import { SpecialtiesRoutes } from '../modules/specialties/specialties.routes';
+import { userRoutes } from '../modules/user/user.routes';
 
-const moduleRoutes: Array<{ path: string; route: Router }> = [
-  {
-    path: "/user",
-    route: modules.userRoutes,
-  },
-  {
-    path: "/auth",
-    route: modules.authRoutes,
-  },
-  {
-    path: "/schedule",
-    route: modules.scheduleRoutes,
-  },
-  {
-    path: "/doctor-schedule",
-    route: modules.doctorScheduleRoutes,
-  },
-  {
-    path: "/specialties",
-    route: modules.specialtiesRoutes,
-  },
-  {
-    path: "/doctor",
-    route: modules.doctorRoutes,
-  },
-  {
-    path: "/admin",
-    route: modules.adminRoutes,
-  },
-  {
-    path: "/patient",
-    route: modules.patientRoutes,
-  },
-  {
-    path: "/appointment",
-    route: modules.appointmentRoutes,
-  },
-  {
-    path: "/prescription",
-    route: modules.prescriptionRoutes,
-  },
-  {
-    path: "/review",
-    route: modules.reviewRoutes,
-  },
-  {
-    path: "/metadata",
-    route: modules.metaRoutes,
-  },
+const router = express.Router();
+
+
+
+router.use(apiLimiter); // Apply to all routes
+
+const moduleRoutes = [
+    {
+        path: '/user',
+        route: userRoutes
+    },
+    {
+        path: '/admin',
+        route: AdminRoutes
+    },
+    {
+        path: '/auth',
+        route: AuthRoutes
+    },
+    {
+        path: '/specialties',
+        route: SpecialtiesRoutes
+    },
+    {
+        path: '/doctor',
+        route: DoctorRoutes
+    },
+    {
+        path: '/patient',
+        route: PatientRoutes
+    },
+    {
+        path: '/schedule',
+        route: ScheduleRoutes
+    },
+    {
+        path: '/doctor-schedule',
+        route: DoctorScheduleRoutes
+    },
+    {
+        path: '/appointment',
+        route: AppointmentRoutes
+    },
+    {
+        path: '/payment',
+        route: PaymentRoutes
+    },
+    {
+        path: '/prescription',
+        route: PrescriptionRoutes
+    },
+    {
+        path: '/review',
+        route: ReviewRoutes
+    },
+    {
+        path: '/meta',
+        route: MetaRoutes
+    }
 ];
 
-export default moduleRoutes.reduce(
-  (router, { path, route }) => router.use(path, route),
-  Router()
-);
+moduleRoutes.forEach(route => router.use(route.path, route.route))
+
+export default router;
