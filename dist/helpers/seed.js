@@ -32,15 +32,6 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -49,9 +40,9 @@ const client_1 = require("@prisma/client");
 const bcrypt = __importStar(require("bcryptjs"));
 const config_1 = __importDefault(require("../config"));
 const prisma_1 = __importDefault(require("../shared/prisma"));
-const seedSuperAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
+const seedSuperAdmin = async () => {
     try {
-        const isExistSuperAdmin = yield prisma_1.default.user.findFirst({
+        const isExistSuperAdmin = await prisma_1.default.user.findFirst({
             where: {
                 role: client_1.UserRole.ADMIN
             }
@@ -61,8 +52,8 @@ const seedSuperAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
             return;
         }
         ;
-        const hashedPassword = yield bcrypt.hash("123456", Number(config_1.default.salt_round));
-        const superAdminData = yield prisma_1.default.user.create({
+        const hashedPassword = await bcrypt.hash("123456", Number(config_1.default.salt_round));
+        const superAdminData = await prisma_1.default.user.create({
             data: {
                 email: "admin@gmail.com",
                 password: hashedPassword,
@@ -82,7 +73,7 @@ const seedSuperAdmin = () => __awaiter(void 0, void 0, void 0, function* () {
         console.error(err);
     }
     finally {
-        yield prisma_1.default.$disconnect();
+        await prisma_1.default.$disconnect();
     }
-});
+};
 exports.default = seedSuperAdmin;

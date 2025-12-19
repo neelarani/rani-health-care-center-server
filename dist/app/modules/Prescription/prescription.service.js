@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,8 +9,8 @@ const http_status_1 = __importDefault(require("http-status"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
-const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const appointmentData = yield prisma_1.default.appointment.findUniqueOrThrow({
+const insertIntoDB = async (user, payload) => {
+    const appointmentData = await prisma_1.default.appointment.findUniqueOrThrow({
         where: {
             id: payload.appointmentId,
             status: client_1.AppointmentStatus.COMPLETED,
@@ -29,11 +20,11 @@ const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, functi
             doctor: true
         }
     });
-    if (!((user === null || user === void 0 ? void 0 : user.email) === appointmentData.doctor.email)) {
+    if (!(user?.email === appointmentData.doctor.email)) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "This is not your appointment!");
     }
     ;
-    const result = yield prisma_1.default.prescription.create({
+    const result = await prisma_1.default.prescription.create({
         data: {
             appointmentId: appointmentData.id,
             doctorId: appointmentData.doctorId,
@@ -46,13 +37,13 @@ const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, functi
         }
     });
     return result;
-});
-const patientPrescription = (user, options) => __awaiter(void 0, void 0, void 0, function* () {
+};
+const patientPrescription = async (user, options) => {
     const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
-    const result = yield prisma_1.default.prescription.findMany({
+    const result = await prisma_1.default.prescription.findMany({
         where: {
             patient: {
-                email: user === null || user === void 0 ? void 0 : user.email
+                email: user?.email
             }
         },
         skip,
@@ -66,10 +57,10 @@ const patientPrescription = (user, options) => __awaiter(void 0, void 0, void 0,
             appointment: true
         }
     });
-    const total = yield prisma_1.default.prescription.count({
+    const total = await prisma_1.default.prescription.count({
         where: {
             patient: {
-                email: user === null || user === void 0 ? void 0 : user.email
+                email: user?.email
             }
         }
     });
@@ -81,8 +72,8 @@ const patientPrescription = (user, options) => __awaiter(void 0, void 0, void 0,
         },
         data: result
     };
-});
-const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, function* () {
+};
+const getAllFromDB = async (filters, options) => {
     const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const { patientEmail, doctorEmail } = filters;
     const andConditions = [];
@@ -101,7 +92,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     const whereConditions = andConditions.length > 0 ? { AND: andConditions } : {};
-    const result = yield prisma_1.default.prescription.findMany({
+    const result = await prisma_1.default.prescription.findMany({
         where: whereConditions,
         skip,
         take: limit,
@@ -116,7 +107,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
             appointment: true,
         },
     });
-    const total = yield prisma_1.default.prescription.count({
+    const total = await prisma_1.default.prescription.count({
         where: whereConditions,
     });
     return {
@@ -127,7 +118,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         },
         data: result,
     };
-});
+};
 exports.PrescriptionService = {
     insertIntoDB,
     patientPrescription,

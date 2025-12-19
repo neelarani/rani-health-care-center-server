@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,13 +9,13 @@ const http_status_1 = __importDefault(require("http-status"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
-const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const patientData = yield prisma_1.default.patient.findUniqueOrThrow({
+const insertIntoDB = async (user, payload) => {
+    const patientData = await prisma_1.default.patient.findUniqueOrThrow({
         where: {
-            email: user === null || user === void 0 ? void 0 : user.email
+            email: user?.email
         }
     });
-    const appointmentData = yield prisma_1.default.appointment.findUniqueOrThrow({
+    const appointmentData = await prisma_1.default.appointment.findUniqueOrThrow({
         where: {
             id: payload.appointmentId
         }
@@ -35,8 +26,8 @@ const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, functi
     if (!(patientData.id === appointmentData.patientId)) {
         throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "This is not your appointment!");
     }
-    return yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-        const result = yield tx.review.create({
+    return await prisma_1.default.$transaction(async (tx) => {
+        const result = await tx.review.create({
             data: {
                 appointmentId: appointmentData.id,
                 doctorId: appointmentData.doctorId,
@@ -45,12 +36,12 @@ const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, functi
                 comment: payload.comment
             }
         });
-        const averageRating = yield tx.review.aggregate({
+        const averageRating = await tx.review.aggregate({
             _avg: {
                 rating: true
             }
         });
-        yield tx.doctor.update({
+        await tx.doctor.update({
             where: {
                 id: result.doctorId
             },
@@ -59,9 +50,9 @@ const insertIntoDB = (user, payload) => __awaiter(void 0, void 0, void 0, functi
             }
         });
         return result;
-    }));
-});
-const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, function* () {
+    });
+};
+const getAllFromDB = async (filters, options) => {
     const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
     const { patientEmail, doctorEmail } = filters;
     const andConditions = [];
@@ -80,7 +71,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     const whereConditions = andConditions.length > 0 ? { AND: andConditions } : {};
-    const result = yield prisma_1.default.review.findMany({
+    const result = await prisma_1.default.review.findMany({
         where: whereConditions,
         skip,
         take: limit,
@@ -95,7 +86,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
             appointment: true,
         },
     });
-    const total = yield prisma_1.default.review.count({
+    const total = await prisma_1.default.review.count({
         where: whereConditions,
     });
     return {
@@ -106,7 +97,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         },
         data: result,
     };
-});
+};
 exports.ReviewService = {
     insertIntoDB,
     getAllFromDB

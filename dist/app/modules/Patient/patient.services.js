@@ -1,24 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -28,10 +8,10 @@ const client_1 = require("@prisma/client");
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const patient_constants_1 = require("./patient.constants");
-const getAllFromDB = (filters_1, options_1, ...args_1) => __awaiter(void 0, [filters_1, options_1, ...args_1], void 0, function* (filters, options, includeHealthData = false // NEW PARAMETER
-) {
+const getAllFromDB = async (filters, options, includeHealthData = false // NEW PARAMETER
+) => {
     const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
-    const { searchTerm } = filters, filterData = __rest(filters, ["searchTerm"]);
+    const { searchTerm, ...filterData } = filters;
     const andConditions = [];
     if (searchTerm) {
         andConditions.push({
@@ -73,7 +53,7 @@ const getAllFromDB = (filters_1, options_1, ...args_1) => __awaiter(void 0, [fil
                 },
             },
         };
-    const result = yield prisma_1.default.patient.findMany({
+    const result = await prisma_1.default.patient.findMany({
         where: whereConditions,
         skip,
         take: limit,
@@ -84,7 +64,7 @@ const getAllFromDB = (filters_1, options_1, ...args_1) => __awaiter(void 0, [fil
             },
         include: includeClause,
     });
-    const total = yield prisma_1.default.patient.count({
+    const total = await prisma_1.default.patient.count({
         where: whereConditions,
     });
     return {
@@ -95,9 +75,9 @@ const getAllFromDB = (filters_1, options_1, ...args_1) => __awaiter(void 0, [fil
         },
         data: result,
     };
-});
-const getByIdFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.patient.findUnique({
+};
+const getByIdFromDB = async (id) => {
+    const result = await prisma_1.default.patient.findUnique({
         where: {
             id,
             isDeleted: false,
@@ -108,18 +88,18 @@ const getByIdFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
         },
     });
     return result;
-});
-const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { patientHealthData, medicalReport } = payload, patientData = __rest(payload, ["patientHealthData", "medicalReport"]);
-    const patientInfo = yield prisma_1.default.patient.findUniqueOrThrow({
+};
+const updateIntoDB = async (id, payload) => {
+    const { patientHealthData, medicalReport, ...patientData } = payload;
+    const patientInfo = await prisma_1.default.patient.findUniqueOrThrow({
         where: {
             id,
             isDeleted: false
         }
     });
-    yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
+    await prisma_1.default.$transaction(async (transactionClient) => {
         //update patient data
-        yield transactionClient.patient.update({
+        await transactionClient.patient.update({
             where: {
                 id
             },
@@ -131,22 +111,22 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
         });
         // create or update patient health data
         if (patientHealthData) {
-            yield transactionClient.patientHealthData.upsert({
+            await transactionClient.patientHealthData.upsert({
                 where: {
                     patientId: patientInfo.id
                 },
                 update: patientHealthData,
-                create: Object.assign(Object.assign({}, patientHealthData), { patientId: patientInfo.id })
+                create: { ...patientHealthData, patientId: patientInfo.id }
             });
         }
         ;
         if (medicalReport) {
-            yield transactionClient.medicalReport.create({
-                data: Object.assign(Object.assign({}, medicalReport), { patientId: patientInfo.id })
+            await transactionClient.medicalReport.create({
+                data: { ...medicalReport, patientId: patientInfo.id }
             });
         }
-    }));
-    const responseData = yield prisma_1.default.patient.findUnique({
+    });
+    const responseData = await prisma_1.default.patient.findUnique({
         where: {
             id: patientInfo.id
         },
@@ -156,44 +136,44 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
         }
     });
     return responseData;
-});
-const deleteFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+};
+const deleteFromDB = async (id) => {
+    const result = await prisma_1.default.$transaction(async (tx) => {
         // delete medical report
-        yield tx.medicalReport.deleteMany({
+        await tx.medicalReport.deleteMany({
             where: {
                 patientId: id
             }
         });
         // delete patient health data
-        yield tx.patientHealthData.delete({
+        await tx.patientHealthData.delete({
             where: {
                 patientId: id
             }
         });
-        const deletedPatient = yield tx.patient.delete({
+        const deletedPatient = await tx.patient.delete({
             where: {
                 id
             }
         });
-        yield tx.user.delete({
+        await tx.user.delete({
             where: {
                 email: deletedPatient.email
             }
         });
         return deletedPatient;
-    }));
+    });
     return result;
-});
-const softDelete = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
-        const deletedPatient = yield transactionClient.patient.update({
+};
+const softDelete = async (id) => {
+    return await prisma_1.default.$transaction(async (transactionClient) => {
+        const deletedPatient = await transactionClient.patient.update({
             where: { id },
             data: {
                 isDeleted: true,
             },
         });
-        yield transactionClient.user.update({
+        await transactionClient.user.update({
             where: {
                 email: deletedPatient.email,
             },
@@ -202,8 +182,8 @@ const softDelete = (id) => __awaiter(void 0, void 0, void 0, function* () {
             },
         });
         return deletedPatient;
-    }));
-});
+    });
+};
 exports.PatientService = {
     getAllFromDB,
     getByIdFromDB,

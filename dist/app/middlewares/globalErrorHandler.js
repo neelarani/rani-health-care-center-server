@@ -7,9 +7,8 @@ const client_1 = require("@prisma/client");
 const http_status_1 = __importDefault(require("http-status"));
 // Sanitize error to prevent exposing sensitive information in production
 const sanitizeError = (error) => {
-    var _a;
     // Don't expose Prisma errors in production
-    if (process.env.NODE_ENV === "production" && ((_a = error.code) === null || _a === void 0 ? void 0 : _a.startsWith("P"))) {
+    if (process.env.NODE_ENV === "production" && error.code?.startsWith("P")) {
         return {
             message: "Database operation failed",
             errorDetails: null,

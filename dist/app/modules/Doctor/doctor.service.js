@@ -1,24 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -29,9 +9,9 @@ const openRouterClient_1 = require("../../../helpers/openRouterClient");
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const doctor_constants_1 = require("./doctor.constants");
-const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllFromDB = async (filters, options) => {
     const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
-    const { searchTerm, specialties } = filters, filterData = __rest(filters, ["searchTerm", "specialties"]);
+    const { searchTerm, specialties, ...filterData } = filters;
     const andConditions = [];
     if (searchTerm) {
         andConditions.push({
@@ -73,7 +53,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         isDeleted: false,
     });
     const whereConditions = andConditions.length > 0 ? { AND: andConditions } : {};
-    const result = yield prisma_1.default.doctor.findMany({
+    const result = await prisma_1.default.doctor.findMany({
         where: whereConditions,
         skip,
         take: limit,
@@ -103,7 +83,7 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         },
     });
     // console.log(result[0].doctorSpecialties);
-    const total = yield prisma_1.default.doctor.count({
+    const total = await prisma_1.default.doctor.count({
         where: whereConditions,
     });
     return {
@@ -114,9 +94,9 @@ const getAllFromDB = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         },
         data: result,
     };
-});
-const getByIdFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield prisma_1.default.doctor.findUnique({
+};
+const getByIdFromDB = async (id) => {
+    const result = await prisma_1.default.doctor.findUnique({
         where: {
             id,
             isDeleted: false,
@@ -136,19 +116,19 @@ const getByIdFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
         },
     });
     return result;
-});
-const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const { specialties, removeSpecialties } = payload, doctorData = __rest(payload, ["specialties", "removeSpecialties"]);
-    const doctorInfo = yield prisma_1.default.doctor.findUniqueOrThrow({
+};
+const updateIntoDB = async (id, payload) => {
+    const { specialties, removeSpecialties, ...doctorData } = payload;
+    const doctorInfo = await prisma_1.default.doctor.findUniqueOrThrow({
         where: {
             id,
             isDeleted: false,
         },
     });
-    yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
+    await prisma_1.default.$transaction(async (transactionClient) => {
         // Step 1: Update doctor basic data
         if (Object.keys(doctorData).length > 0) {
-            yield transactionClient.doctor.update({
+            await transactionClient.doctor.update({
                 where: {
                     id,
                 },
@@ -160,7 +140,7 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
             Array.isArray(removeSpecialties) &&
             removeSpecialties.length > 0) {
             // Validate that specialties to remove exist for this doctor
-            const existingDoctorSpecialties = yield transactionClient.doctorSpecialties.findMany({
+            const existingDoctorSpecialties = await transactionClient.doctorSpecialties.findMany({
                 where: {
                     doctorId: doctorInfo.id,
                     specialitiesId: {
@@ -174,7 +154,7 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
                 throw new Error(`Cannot remove non-existent specialties: ${notFound.join(", ")}`);
             }
             // Delete the specialties
-            yield transactionClient.doctorSpecialties.deleteMany({
+            await transactionClient.doctorSpecialties.deleteMany({
                 where: {
                     doctorId: doctorInfo.id,
                     specialitiesId: {
@@ -186,7 +166,7 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
         // Step 3: Add new specialties if provided
         if (specialties && Array.isArray(specialties) && specialties.length > 0) {
             // Verify all specialties exist in Specialties table
-            const existingSpecialties = yield transactionClient.specialties.findMany({
+            const existingSpecialties = await transactionClient.specialties.findMany({
                 where: {
                     id: {
                         in: specialties,
@@ -202,7 +182,7 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
                 throw new Error(`Invalid specialty IDs: ${invalidSpecialties.join(", ")}`);
             }
             // Check for duplicates - don't add specialties that already exist
-            const currentDoctorSpecialties = yield transactionClient.doctorSpecialties.findMany({
+            const currentDoctorSpecialties = await transactionClient.doctorSpecialties.findMany({
                 where: {
                     doctorId: doctorInfo.id,
                     specialitiesId: {
@@ -221,14 +201,14 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
                     doctorId: doctorInfo.id,
                     specialitiesId: specialtyId,
                 }));
-                yield transactionClient.doctorSpecialties.createMany({
+                await transactionClient.doctorSpecialties.createMany({
                     data: doctorSpecialtiesData,
                 });
             }
         }
-    }));
+    });
     // Step 4: Return updated doctor with specialties
-    const result = yield prisma_1.default.doctor.findUnique({
+    const result = await prisma_1.default.doctor.findUnique({
         where: {
             id: doctorInfo.id,
         },
@@ -241,31 +221,31 @@ const updateIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function
         },
     });
     return result;
-});
-const deleteFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
-        const deleteDoctor = yield transactionClient.doctor.delete({
+};
+const deleteFromDB = async (id) => {
+    return await prisma_1.default.$transaction(async (transactionClient) => {
+        const deleteDoctor = await transactionClient.doctor.delete({
             where: {
                 id,
             },
         });
-        yield transactionClient.user.delete({
+        await transactionClient.user.delete({
             where: {
                 email: deleteDoctor.email,
             },
         });
         return deleteDoctor;
-    }));
-});
-const softDelete = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
-        const deleteDoctor = yield transactionClient.doctor.update({
+    });
+};
+const softDelete = async (id) => {
+    return await prisma_1.default.$transaction(async (transactionClient) => {
+        const deleteDoctor = await transactionClient.doctor.update({
             where: { id },
             data: {
                 isDeleted: true,
             },
         });
-        yield transactionClient.user.update({
+        await transactionClient.user.update({
             where: {
                 email: deleteDoctor.email,
             },
@@ -274,11 +254,11 @@ const softDelete = (id) => __awaiter(void 0, void 0, void 0, function* () {
             },
         });
         return deleteDoctor;
-    }));
-});
-const getAISuggestion = (input) => __awaiter(void 0, void 0, void 0, function* () {
+    });
+};
+const getAISuggestion = async (input) => {
     // Fetch all active doctors with their specialties and ratings
-    const doctors = yield prisma_1.default.doctor.findMany({
+    const doctors = await prisma_1.default.doctor.findMany({
         where: { isDeleted: false },
         include: {
             doctorSpecialties: {
@@ -293,7 +273,7 @@ const getAISuggestion = (input) => __awaiter(void 0, void 0, void 0, function* (
     // Transform doctors data to include calculated average ratings and all specialties
     const doctorsWithRatings = doctors.map((doctor) => {
         const allSpecialties = doctor.doctorSpecialties
-            .map((ds) => { var _a; return (_a = ds.specialities) === null || _a === void 0 ? void 0 : _a.title; })
+            .map((ds) => ds.specialities?.title)
             .filter(Boolean);
         return {
             id: doctor.id,
@@ -374,7 +354,7 @@ RESPOND WITH ONLY THE JSON ARRAY - NO EXPLANATIONS, NO MARKDOWN, NO EXTRA TEXT.
 `,
     };
     try {
-        const response = yield (0, openRouterClient_1.askOpenRouter)([systemMessage, userMessage]);
+        const response = await (0, openRouterClient_1.askOpenRouter)([systemMessage, userMessage]);
         // Clean the response to extract JSON
         const cleanedJson = response
             .replace(/```(?:json)?\s*/g, "") // remove ``` or ```json
@@ -407,10 +387,10 @@ RESPOND WITH ONLY THE JSON ARRAY - NO EXPLANATIONS, NO MARKDOWN, NO EXTRA TEXT.
             profilePhoto: doctor.profilePhoto,
         }));
     }
-});
-const getAllPublic = (filters, options) => __awaiter(void 0, void 0, void 0, function* () {
+};
+const getAllPublic = async (filters, options) => {
     const { limit, page, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
-    const { searchTerm, specialties } = filters, filterData = __rest(filters, ["searchTerm", "specialties"]);
+    const { searchTerm, specialties, ...filterData } = filters;
     const andConditions = [];
     if (searchTerm) {
         andConditions.push({
@@ -451,7 +431,7 @@ const getAllPublic = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         isDeleted: false,
     });
     const whereConditions = andConditions.length > 0 ? { AND: andConditions } : {};
-    const result = yield prisma_1.default.doctor.findMany({
+    const result = await prisma_1.default.doctor.findMany({
         where: whereConditions,
         skip,
         take: limit,
@@ -495,7 +475,7 @@ const getAllPublic = (filters, options) => __awaiter(void 0, void 0, void 0, fun
             },
         },
     });
-    const total = yield prisma_1.default.doctor.count({
+    const total = await prisma_1.default.doctor.count({
         where: whereConditions,
     });
     return {
@@ -506,7 +486,7 @@ const getAllPublic = (filters, options) => __awaiter(void 0, void 0, void 0, fun
         },
         data: result,
     };
-});
+};
 exports.DoctorService = {
     updateIntoDB,
     getAllFromDB,
