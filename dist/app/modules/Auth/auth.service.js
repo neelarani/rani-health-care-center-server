@@ -1,139 +1,198 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
+'use strict';
+var __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (
+          !desc ||
+          ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)
+        ) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+var __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+var __importStar =
+  (this && this.__importStar) ||
+  (function () {
+    var ownKeys = function (o) {
+      ownKeys =
+        Object.getOwnPropertyNames ||
+        function (o) {
+          var ar = [];
+          for (var k in o)
+            if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+          return ar;
         };
-        return ownKeys(o);
+      return ownKeys(o);
     };
     return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
+      if (mod && mod.__esModule) return mod;
+      var result = {};
+      if (mod != null)
+        for (var k = ownKeys(mod), i = 0; i < k.length; i++)
+          if (k[i] !== 'default') __createBinding(result, mod, k[i]);
+      __setModuleDefault(result, mod);
+      return result;
     };
-})();
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
+  })();
+var __importDefault =
+  (this && this.__importDefault) ||
+  function (mod) {
+    return mod && mod.__esModule ? mod : { default: mod };
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.AuthServices = void 0;
-const client_1 = require("@prisma/client");
-const bcrypt = __importStar(require("bcryptjs"));
-const http_status_1 = __importDefault(require("http-status"));
-const config_1 = __importDefault(require("../../../config"));
-const jwtHelpers_1 = require("../../../helpers/jwtHelpers");
-const prisma_1 = __importDefault(require("../../../shared/prisma"));
-const ApiError_1 = __importDefault(require("../../errors/ApiError"));
-const emailSender_1 = __importDefault(require("./emailSender"));
-const loginUser = async (payload) => {
-    const userData = await prisma_1.default.user.findUniqueOrThrow({
-        where: {
-            email: payload.email,
-            status: client_1.UserStatus.ACTIVE,
-        },
-    });
-    const isCorrectPassword = await bcrypt.compare(payload.password, userData.password);
-    if (!isCorrectPassword) {
-        throw new Error('Password incorrect!');
-    }
-    const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
-        email: userData.email,
-        role: userData.role,
-    }, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
-    const refreshToken = jwtHelpers_1.jwtHelpers.generateToken({
-        email: userData.email,
-        role: userData.role,
-    }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
-    return {
-        accessToken,
-        refreshToken,
-        needPasswordChange: userData.needPasswordChange,
-    };
+const client_1 = require('@prisma/client');
+const bcrypt = __importStar(require('bcryptjs'));
+const http_status_1 = __importDefault(require('http-status'));
+const config_1 = __importDefault(require('../../../config'));
+const jwtHelpers_1 = require('../../../helpers/jwtHelpers');
+const prisma_1 = __importDefault(require('../../../shared/prisma'));
+const ApiError_1 = __importDefault(require('../../errors/ApiError'));
+const emailSender_1 = __importDefault(require('./emailSender'));
+const loginUser = async payload => {
+  const userData = await prisma_1.default.user.findUniqueOrThrow({
+    where: {
+      email: payload.email,
+      status: client_1.UserStatus.ACTIVE,
+    },
+  });
+  const isCorrectPassword = await bcrypt.compare(
+    payload.password,
+    userData.password
+  );
+  if (!isCorrectPassword) {
+    throw new Error('Password incorrect!');
+  }
+  const accessToken = jwtHelpers_1.jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+    },
+    config_1.default.jwt.jwt_secret,
+    config_1.default.jwt.expires_in
+  );
+  const refreshToken = jwtHelpers_1.jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+    },
+    config_1.default.jwt.refresh_token_secret,
+    config_1.default.jwt.refresh_token_expires_in
+  );
+  return {
+    accessToken,
+    refreshToken,
+    needPasswordChange: userData.needPasswordChange,
+  };
 };
-const refreshToken = async (token) => {
-    let decodedData;
-    try {
-        decodedData = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.refresh_token_secret);
-    }
-    catch (err) {
-        throw new Error('You are not authorized!');
-    }
-    const userData = await prisma_1.default.user.findUniqueOrThrow({
-        where: {
-            email: decodedData.email,
-            status: client_1.UserStatus.ACTIVE,
-        },
-    });
-    const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
-        email: userData.email,
-        role: userData.role,
-    }, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
-    const refreshToken = jwtHelpers_1.jwtHelpers.generateToken({
-        email: userData.email,
-        role: userData.role,
-    }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
-    return {
-        accessToken,
-        refreshToken,
-        needPasswordChange: userData.needPasswordChange,
-    };
+const refreshToken = async token => {
+  let decodedData;
+  try {
+    decodedData = jwtHelpers_1.jwtHelpers.verifyToken(
+      token,
+      config_1.default.jwt.refresh_token_secret
+    );
+  } catch (err) {
+    throw new Error('You are not authorized!');
+  }
+  const userData = await prisma_1.default.user.findUniqueOrThrow({
+    where: {
+      email: decodedData.email,
+      status: client_1.UserStatus.ACTIVE,
+    },
+  });
+  const accessToken = jwtHelpers_1.jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+    },
+    config_1.default.jwt.jwt_secret,
+    config_1.default.jwt.expires_in
+  );
+  const refreshToken = jwtHelpers_1.jwtHelpers.generateToken(
+    {
+      email: userData.email,
+      role: userData.role,
+    },
+    config_1.default.jwt.refresh_token_secret,
+    config_1.default.jwt.refresh_token_expires_in
+  );
+  return {
+    accessToken,
+    refreshToken,
+    needPasswordChange: userData.needPasswordChange,
+  };
 };
 const changePassword = async (user, payload) => {
-    const userData = await prisma_1.default.user.findUniqueOrThrow({
-        where: {
-            email: user.email,
-            status: client_1.UserStatus.ACTIVE,
-        },
-    });
-    const isCorrectPassword = await bcrypt.compare(payload.oldPassword, userData.password);
-    if (!isCorrectPassword) {
-        throw new Error('Password incorrect!');
-    }
-    const hashedPassword = await bcrypt.hash(payload.newPassword, Number(config_1.default.salt_round));
-    await prisma_1.default.user.update({
-        where: {
-            email: userData.email,
-        },
-        data: {
-            password: hashedPassword,
-            needPasswordChange: false,
-        },
-    });
-    return {
-        message: 'Password changed successfully!',
-    };
+  const userData = await prisma_1.default.user.findUniqueOrThrow({
+    where: {
+      email: user.email,
+      status: client_1.UserStatus.ACTIVE,
+    },
+  });
+  const isCorrectPassword = await bcrypt.compare(
+    payload.oldPassword,
+    userData.password
+  );
+  if (!isCorrectPassword) {
+    throw new Error('Password incorrect!');
+  }
+  const hashedPassword = await bcrypt.hash(
+    payload.newPassword,
+    Number(config_1.default.salt_round)
+  );
+  await prisma_1.default.user.update({
+    where: {
+      email: userData.email,
+    },
+    data: {
+      password: hashedPassword,
+      needPasswordChange: false,
+    },
+  });
+  return {
+    message: 'Password changed successfully!',
+  };
 };
-const forgotPassword = async (payload) => {
-    const userData = await prisma_1.default.user.findUniqueOrThrow({
-        where: {
-            email: payload.email,
-            status: client_1.UserStatus.ACTIVE,
-        },
-    });
-    const resetPassToken = jwtHelpers_1.jwtHelpers.generateToken({ email: userData.email, userId: userData.id, role: userData.role }, config_1.default.jwt.reset_pass_secret, config_1.default.jwt.reset_pass_token_expires_in);
-    const resetPassLink = config_1.default.reset_pass_link +
-        `?email=${encodeURIComponent(userData.email)}&token=${resetPassToken}`;
-    await (0, emailSender_1.default)(userData.email, `
+const forgotPassword = async payload => {
+  const userData = await prisma_1.default.user.findUniqueOrThrow({
+    where: {
+      email: payload.email,
+      status: client_1.UserStatus.ACTIVE,
+    },
+  });
+  const resetPassToken = jwtHelpers_1.jwtHelpers.generateToken(
+    { email: userData.email, userId: userData.id, role: userData.role },
+    config_1.default.jwt.reset_pass_secret,
+    config_1.default.jwt.reset_pass_token_expires_in
+  );
+  const resetPassLink =
+    config_1.default.reset_pass_link +
+    `?email=${encodeURIComponent(userData.email)}&token=${resetPassToken}`;
+  await (0, emailSender_1.default)(
+    userData.email,
+    `
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -207,130 +266,151 @@ const forgotPassword = async (payload) => {
             </table>
         </body>
         </html>
-        `);
+        `
+  );
 };
 const resetPassword = async (token, payload, user) => {
-    let userEmail;
-    // Case 1: Token-based reset (from forgot password email)
-    if (token) {
-        const decodedToken = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.reset_pass_secret);
-        if (!decodedToken) {
-            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Invalid or expired reset token!');
-        }
-        // Verify email from token matches the email in payload
-        if (payload.email && decodedToken.email !== payload.email) {
-            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Email mismatch! Invalid reset request.');
-        }
-        userEmail = decodedToken.email;
+  let userEmail;
+  // Case 1: Token-based reset (from forgot password email)
+  if (token) {
+    const decodedToken = jwtHelpers_1.jwtHelpers.verifyToken(
+      token,
+      config_1.default.jwt.reset_pass_secret
+    );
+    if (!decodedToken) {
+      throw new ApiError_1.default(
+        http_status_1.default.FORBIDDEN,
+        'Invalid or expired reset token!'
+      );
     }
-    // Case 2: Authenticated user with needPasswordChange (newly created admin/doctor)
-    else if (user && user.email) {
-        console.log({ user }, 'needpassworchange');
-        const authenticatedUser = await prisma_1.default.user.findUniqueOrThrow({
-            where: {
-                email: user.email,
-                status: client_1.UserStatus.ACTIVE,
-            },
-        });
-        // Verify user actually needs password change
-        if (!authenticatedUser.needPasswordChange) {
-            throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "You don't need to reset your password. Use change password instead.");
-        }
-        userEmail = user.email;
+    // Verify email from token matches the email in payload
+    if (payload.email && decodedToken.email !== payload.email) {
+      throw new ApiError_1.default(
+        http_status_1.default.FORBIDDEN,
+        'Email mismatch! Invalid reset request.'
+      );
     }
-    else {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid request. Either provide a valid token or be authenticated.');
-    }
-    // hash password
-    const password = await bcrypt.hash(payload.password, Number(config_1.default.salt_round));
-    // update into database
-    await prisma_1.default.user.update({
-        where: {
-            email: userEmail,
-        },
-        data: {
-            password,
-            needPasswordChange: false,
-        },
+    userEmail = decodedToken.email;
+  }
+  // Case 2: Authenticated user with needPasswordChange (newly created admin/doctor)
+  else if (user && user.email) {
+    console.log({ user }, 'needpassworchange');
+    const authenticatedUser = await prisma_1.default.user.findUniqueOrThrow({
+      where: {
+        email: user.email,
+        status: client_1.UserStatus.ACTIVE,
+      },
     });
+    // Verify user actually needs password change
+    if (!authenticatedUser.needPasswordChange) {
+      throw new ApiError_1.default(
+        http_status_1.default.BAD_REQUEST,
+        "You don't need to reset your password. Use change password instead."
+      );
+    }
+    userEmail = user.email;
+  } else {
+    throw new ApiError_1.default(
+      http_status_1.default.BAD_REQUEST,
+      'Invalid request. Either provide a valid token or be authenticated.'
+    );
+  }
+  // hash password
+  const password = await bcrypt.hash(
+    payload.password,
+    Number(config_1.default.salt_round)
+  );
+  // update into database
+  await prisma_1.default.user.update({
+    where: {
+      email: userEmail,
+    },
+    data: {
+      password,
+      needPasswordChange: false,
+    },
+  });
 };
-const getMe = async (user) => {
-    const accessToken = user.accessToken;
-    const decodedData = jwtHelpers_1.jwtHelpers.verifyToken(accessToken, config_1.default.jwt.jwt_secret);
-    const userData = await prisma_1.default.user.findUniqueOrThrow({
-        where: {
-            email: decodedData.email,
-            status: client_1.UserStatus.ACTIVE,
-        },
+const getMe = async user => {
+  const accessToken = user.accessToken;
+  const decodedData = jwtHelpers_1.jwtHelpers.verifyToken(
+    accessToken,
+    config_1.default.jwt.jwt_secret
+  );
+  const userData = await prisma_1.default.user.findUniqueOrThrow({
+    where: {
+      email: decodedData.email,
+      status: client_1.UserStatus.ACTIVE,
+    },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      needPasswordChange: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      admin: {
         select: {
-            id: true,
-            email: true,
-            role: true,
-            needPasswordChange: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true,
-            admin: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    profilePhoto: true,
-                    contactNumber: true,
-                    isDeleted: true,
-                    createdAt: true,
-                    updatedAt: true,
-                },
-            },
-            doctor: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    profilePhoto: true,
-                    contactNumber: true,
-                    address: true,
-                    registrationNumber: true,
-                    experience: true,
-                    gender: true,
-                    appointmentFee: true,
-                    qualification: true,
-                    currentWorkingPlace: true,
-                    designation: true,
-                    averageRating: true,
-                    isDeleted: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    doctorSpecialties: {
-                        include: {
-                            specialities: true,
-                        },
-                    },
-                },
-            },
-            patient: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    profilePhoto: true,
-                    contactNumber: true,
-                    address: true,
-                    isDeleted: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    patientHealthData: true,
-                },
-            },
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
         },
-    });
-    return userData;
+      },
+      doctor: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          address: true,
+          registrationNumber: true,
+          experience: true,
+          gender: true,
+          appointmentFee: true,
+          qualification: true,
+          currentWorkingPlace: true,
+          designation: true,
+          averageRating: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+          doctorSpecialties: {
+            include: {
+              specialities: true,
+            },
+          },
+        },
+      },
+      patient: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          profilePhoto: true,
+          contactNumber: true,
+          address: true,
+          isDeleted: true,
+          createdAt: true,
+          updatedAt: true,
+          patientHealthData: true,
+        },
+      },
+    },
+  });
+  return userData;
 };
 exports.AuthServices = {
-    loginUser,
-    refreshToken,
-    changePassword,
-    forgotPassword,
-    resetPassword,
-    getMe,
+  loginUser,
+  refreshToken,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+  getMe,
 };
