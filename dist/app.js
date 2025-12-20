@@ -16,7 +16,10 @@ const app = (0, express_1.default)();
 app.use((0, cookie_parser_1.default)());
 app.post('/webhook', express_1.default.raw({ type: 'application/json' }), payment_controller_1.PaymentController.handleStripeWebhookEvent);
 app.use((0, cors_1.default)({
-    origin: ['http://localhost:3000', 'https://health-care-blond.vercel.app'],
+    origin: [
+        'http://localhost:3000',
+        'https://rani-health-care-center-client.vercel.app',
+    ],
     credentials: true,
 }));
 //parser

@@ -20,7 +20,10 @@ app.post(
 
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'https://health-care-blond.vercel.app'],
+    origin: [
+      'http://localhost:3000',
+      'https://rani-health-care-center-client.vercel.app',
+    ],
     credentials: true,
   })
 );
