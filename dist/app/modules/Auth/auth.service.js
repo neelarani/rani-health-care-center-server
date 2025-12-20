@@ -49,25 +49,25 @@ const loginUser = async (payload) => {
     const userData = await prisma_1.default.user.findUniqueOrThrow({
         where: {
             email: payload.email,
-            status: client_1.UserStatus.ACTIVE
-        }
+            status: client_1.UserStatus.ACTIVE,
+        },
     });
     const isCorrectPassword = await bcrypt.compare(payload.password, userData.password);
     if (!isCorrectPassword) {
-        throw new Error("Password incorrect!");
+        throw new Error('Password incorrect!');
     }
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
-        role: userData.role
+        role: userData.role,
     }, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
     const refreshToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
-        role: userData.role
+        role: userData.role,
     }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
     return {
         accessToken,
         refreshToken,
-        needPasswordChange: userData.needPasswordChange
+        needPasswordChange: userData.needPasswordChange,
     };
 };
 const refreshToken = async (token) => {
@@ -76,62 +76,63 @@ const refreshToken = async (token) => {
         decodedData = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.refresh_token_secret);
     }
     catch (err) {
-        throw new Error("You are not authorized!");
+        throw new Error('You are not authorized!');
     }
     const userData = await prisma_1.default.user.findUniqueOrThrow({
         where: {
             email: decodedData.email,
-            status: client_1.UserStatus.ACTIVE
-        }
+            status: client_1.UserStatus.ACTIVE,
+        },
     });
     const accessToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
-        role: userData.role
+        role: userData.role,
     }, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
     const refreshToken = jwtHelpers_1.jwtHelpers.generateToken({
         email: userData.email,
-        role: userData.role
+        role: userData.role,
     }, config_1.default.jwt.refresh_token_secret, config_1.default.jwt.refresh_token_expires_in);
     return {
         accessToken,
         refreshToken,
-        needPasswordChange: userData.needPasswordChange
+        needPasswordChange: userData.needPasswordChange,
     };
 };
 const changePassword = async (user, payload) => {
     const userData = await prisma_1.default.user.findUniqueOrThrow({
         where: {
             email: user.email,
-            status: client_1.UserStatus.ACTIVE
-        }
+            status: client_1.UserStatus.ACTIVE,
+        },
     });
     const isCorrectPassword = await bcrypt.compare(payload.oldPassword, userData.password);
     if (!isCorrectPassword) {
-        throw new Error("Password incorrect!");
+        throw new Error('Password incorrect!');
     }
     const hashedPassword = await bcrypt.hash(payload.newPassword, Number(config_1.default.salt_round));
     await prisma_1.default.user.update({
         where: {
-            email: userData.email
+            email: userData.email,
         },
         data: {
             password: hashedPassword,
-            needPasswordChange: false
-        }
+            needPasswordChange: false,
+        },
     });
     return {
-        message: "Password changed successfully!"
+        message: 'Password changed successfully!',
     };
 };
 const forgotPassword = async (payload) => {
     const userData = await prisma_1.default.user.findUniqueOrThrow({
         where: {
             email: payload.email,
-            status: client_1.UserStatus.ACTIVE
-        }
+            status: client_1.UserStatus.ACTIVE,
+        },
     });
     const resetPassToken = jwtHelpers_1.jwtHelpers.generateToken({ email: userData.email, userId: userData.id, role: userData.role }, config_1.default.jwt.reset_pass_secret, config_1.default.jwt.reset_pass_token_expires_in);
-    const resetPassLink = config_1.default.reset_pass_link + `?email=${encodeURIComponent(userData.email)}&token=${resetPassToken}`;
+    const resetPassLink = config_1.default.reset_pass_link +
+        `?email=${encodeURIComponent(userData.email)}&token=${resetPassToken}`;
     await (0, emailSender_1.default)(userData.email, `
         <!DOCTYPE html>
         <html lang="en">
@@ -214,22 +215,22 @@ const resetPassword = async (token, payload, user) => {
     if (token) {
         const decodedToken = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.reset_pass_secret);
         if (!decodedToken) {
-            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Invalid or expired reset token!");
+            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Invalid or expired reset token!');
         }
         // Verify email from token matches the email in payload
         if (payload.email && decodedToken.email !== payload.email) {
-            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "Email mismatch! Invalid reset request.");
+            throw new ApiError_1.default(http_status_1.default.FORBIDDEN, 'Email mismatch! Invalid reset request.');
         }
         userEmail = decodedToken.email;
     }
     // Case 2: Authenticated user with needPasswordChange (newly created admin/doctor)
     else if (user && user.email) {
-        console.log({ user }, "needpassworchange");
+        console.log({ user }, 'needpassworchange');
         const authenticatedUser = await prisma_1.default.user.findUniqueOrThrow({
             where: {
                 email: user.email,
-                status: client_1.UserStatus.ACTIVE
-            }
+                status: client_1.UserStatus.ACTIVE,
+            },
         });
         // Verify user actually needs password change
         if (!authenticatedUser.needPasswordChange) {
@@ -238,19 +239,19 @@ const resetPassword = async (token, payload, user) => {
         userEmail = user.email;
     }
     else {
-        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, "Invalid request. Either provide a valid token or be authenticated.");
+        throw new ApiError_1.default(http_status_1.default.BAD_REQUEST, 'Invalid request. Either provide a valid token or be authenticated.');
     }
     // hash password
     const password = await bcrypt.hash(payload.password, Number(config_1.default.salt_round));
     // update into database
     await prisma_1.default.user.update({
         where: {
-            email: userEmail
+            email: userEmail,
         },
         data: {
             password,
-            needPasswordChange: false
-        }
+            needPasswordChange: false,
+        },
     });
 };
 const getMe = async (user) => {
@@ -259,7 +260,7 @@ const getMe = async (user) => {
     const userData = await prisma_1.default.user.findUniqueOrThrow({
         where: {
             email: decodedData.email,
-            status: client_1.UserStatus.ACTIVE
+            status: client_1.UserStatus.ACTIVE,
         },
         select: {
             id: true,
@@ -279,7 +280,7 @@ const getMe = async (user) => {
                     isDeleted: true,
                     createdAt: true,
                     updatedAt: true,
-                }
+                },
             },
             doctor: {
                 select: {
@@ -302,10 +303,10 @@ const getMe = async (user) => {
                     updatedAt: true,
                     doctorSpecialties: {
                         include: {
-                            specialities: true
-                        }
-                    }
-                }
+                            specialities: true,
+                        },
+                    },
+                },
             },
             patient: {
                 select: {
@@ -319,9 +320,9 @@ const getMe = async (user) => {
                     createdAt: true,
                     updatedAt: true,
                     patientHealthData: true,
-                }
-            }
-        }
+                },
+            },
+        },
     });
     return userData;
 };
@@ -331,5 +332,5 @@ exports.AuthServices = {
     changePassword,
     forgotPassword,
     resetPassword,
-    getMe
+    getMe,
 };
