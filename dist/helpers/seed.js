@@ -44,30 +44,29 @@ const seedSuperAdmin = async () => {
     try {
         const isExistSuperAdmin = await prisma_1.default.user.findFirst({
             where: {
-                role: client_1.UserRole.ADMIN
-            }
+                role: client_1.UserRole.ADMIN,
+            },
         });
         if (isExistSuperAdmin) {
-            console.log("Super admin already exists!");
+            console.log('Super admin already exists!');
             return;
         }
-        ;
-        const hashedPassword = await bcrypt.hash("123456", Number(config_1.default.salt_round));
+        const hashedPassword = await bcrypt.hash('123456', Number(config_1.default.salt_round));
         const superAdminData = await prisma_1.default.user.create({
             data: {
-                email: "admin@gmail.com",
+                email: 'admin@gmail.com',
                 password: hashedPassword,
                 role: client_1.UserRole.ADMIN,
                 admin: {
                     create: {
-                        name: "Admin",
+                        name: 'Admin',
                         //email: "super@admin.com",
-                        contactNumber: "01234567890"
-                    }
-                }
-            }
+                        contactNumber: '01234567890',
+                    },
+                },
+            },
         });
-        console.log("Super Admin Created Successfully!", superAdminData);
+        console.log('Super Admin Created Successfully!', superAdminData);
     }
     catch (err) {
         console.error(err);
